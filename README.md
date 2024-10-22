@@ -53,3 +53,47 @@ Contributions to improve this module are welcome. Please submit a pull request o
 ## License
 
 This module is released under the MIT License. See the [LICENSE](./LICENSE) file for more details.
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_null"></a> [null](#provider\_null) | n/a |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [null_resource.helm_install](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_chart_name"></a> [chart\_name](#input\_chart\_name) | n/a | `string` | n/a | yes |
+| <a name="input_chart_version"></a> [chart\_version](#input\_chart\_version) | n/a | `string` | n/a | yes |
+| <a name="input_cluster_ca_certificate"></a> [cluster\_ca\_certificate](#input\_cluster\_ca\_certificate) | n/a | `string` | n/a | yes |
+| <a name="input_cluster_endpoint"></a> [cluster\_endpoint](#input\_cluster\_endpoint) | n/a | `string` | n/a | yes |
+| <a name="input_create_namespace"></a> [create\_namespace](#input\_create\_namespace) | n/a | `bool` | `false` | no |
+| <a name="input_namespace"></a> [namespace](#input\_namespace) | n/a | `string` | n/a | yes |
+| <a name="input_release_name"></a> [release\_name](#input\_release\_name) | n/a | `string` | n/a | yes |
+| <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | n/a | `string` | n/a | yes |
+| <a name="input_repo_url"></a> [repo\_url](#input\_repo\_url) | n/a | `string` | n/a | yes |
+| <a name="input_set_values"></a> [set\_values](#input\_set\_values) | A map of values to pass to the Helm chart | `any` | `{}` | no |
+| <a name="input_token"></a> [token](#input\_token) | n/a | `string` | n/a | yes |
+
+## Outputs
+
+No outputs.
+<!-- END_TF_DOCS -->
