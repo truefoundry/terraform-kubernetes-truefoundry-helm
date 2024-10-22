@@ -4,7 +4,6 @@ resource "null_resource" "helm_install" {
     chart_version = var.chart_version
     release_name  = var.release_name
     namespace     = var.namespace
-    always_run    = "${timestamp()}"
   }
 
   provisioner "local-exec" {
