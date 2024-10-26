@@ -54,3 +54,8 @@ variable "set_values" {
   description = "A map of values to pass to the Helm chart"
   default     = {}
 }
+variable "trigger_helm_update" {
+  description = "Set this to any value to trigger a Helm chart update"
+  type        = string
+  default     = null
+}

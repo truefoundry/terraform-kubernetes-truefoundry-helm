@@ -3,12 +3,12 @@ data "aws_eks_cluster_auth" "cluster" {
 }
 resource "null_resource" "helm_install" {
   triggers = {
-    chart_name    = var.chart_name
-    chart_version = var.chart_version
-    release_name  = var.release_name
-    namespace     = var.namespace
+    chart_name     = var.chart_name
+    chart_version  = var.chart_version
+    release_name   = var.release_name
+    namespace      = var.namespace
+    update_trigger = var.trigger_helm_update != null ? var.trigger_helm_update : "initial"
   }
-  # Add this data source after the existing aws_eks_cluster data source
 
   provisioner "local-exec" {
     command = <<-EOT
