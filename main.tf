@@ -1,3 +1,6 @@
+data "aws_eks_cluster_auth" "cluster" {
+  name = var.cluster_name
+}
 resource "null_resource" "helm_install" {
   triggers = {
     chart_name    = var.chart_name
@@ -5,6 +8,7 @@ resource "null_resource" "helm_install" {
     release_name  = var.release_name
     namespace     = var.namespace
   }
+  # Add this data source after the existing aws_eks_cluster data source
 
   provisioner "local-exec" {
     command = <<-EOT
@@ -32,7 +36,7 @@ resource "null_resource" "helm_install" {
       users:
       - name: aws
         user:
-          token: ${var.token}
+          token: ${data.aws_eks_cluster_auth.cluster.token}
       EOF
       echo "Wrote kubeconfig content to $KUBECONFIG_FILE"
       

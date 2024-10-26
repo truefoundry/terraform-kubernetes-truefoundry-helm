@@ -44,9 +44,9 @@ variable "cluster_endpoint" {
   description = "Endpoint of the cluster"
 }
 
-variable "token" {
+variable "cluster_name" {
   type        = string
-  description = "Token to authenticate with the cluster"
+  description = "Name of the cluster"
 }
 
 variable "set_values" {
