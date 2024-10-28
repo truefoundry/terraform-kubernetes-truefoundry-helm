@@ -1,13 +1,14 @@
 data "aws_eks_cluster_auth" "cluster" {
   name = var.cluster_name
 }
+
 resource "null_resource" "helm_install" {
   triggers = {
     chart_name     = var.chart_name
     chart_version  = var.chart_version
     release_name   = var.release_name
     namespace      = var.namespace
-    update_trigger = var.trigger_helm_update != null ? var.trigger_helm_update : "initial"
+    update_trigger = var.trigger_helm_update != null ? timestamp() : "initial"
   }
 
   provisioner "local-exec" {
