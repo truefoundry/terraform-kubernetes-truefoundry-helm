@@ -94,7 +94,7 @@ No modules.
 | <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Name of the Helm repository | `string` | n/a | yes |
 | <a name="input_repo_url"></a> [repo\_url](#input\_repo\_url) | URL of the Helm repository | `string` | n/a | yes |
 | <a name="input_set_values"></a> [set\_values](#input\_set\_values) | A map of values to pass to the Helm chart | `any` | `{}` | no |
-| <a name="input_trigger_helm_update"></a> [trigger\_helm\_update](#input\_trigger\_helm\_update) | Set this to any value to trigger a Helm chart update | `string` | `null` | no |
+| <a name="input_trigger_helm_update"></a> [trigger\_helm\_update](#input\_trigger\_helm\_update) | Set this to any value to trigger a Helm chart update | `bool` | `false` | no |
 
 ## Outputs
 
