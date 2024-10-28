@@ -2,6 +2,11 @@ data "aws_eks_cluster_auth" "cluster" {
   name = var.cluster_name
 }
 
+data "aws_eks_cluster" "cluster" {
+  name = var.cluster_name
+}
+
+
 resource "null_resource" "helm_install" {
   triggers = {
     chart_name     = var.chart_name
@@ -25,8 +30,8 @@ resource "null_resource" "helm_install" {
       kind: Config
       clusters:
       - cluster:
-          server: ${var.cluster_endpoint}
-          certificate-authority-data: ${var.cluster_ca_certificate}
+          server: ${data.aws_eks_cluster.cluster.endpoint}
+          certificate-authority-data: ${data.aws_eks_cluster.cluster.certificate_authority[0].data}
         name: kubernetes
       contexts:
       - context:

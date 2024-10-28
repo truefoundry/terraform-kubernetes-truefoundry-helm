@@ -34,16 +34,6 @@ variable "repo_url" {
   description = "URL of the Helm repository"
 }
 
-variable "cluster_ca_certificate" {
-  type        = string
-  description = "CA certificate of the cluster"
-}
-
-variable "cluster_endpoint" {
-  type        = string
-  description = "Endpoint of the cluster"
-}
-
 variable "cluster_name" {
   type        = string
   description = "Name of the cluster"
