@@ -34,23 +34,18 @@ variable "repo_url" {
   description = "URL of the Helm repository"
 }
 
-variable "cluster_ca_certificate" {
+variable "cluster_name" {
   type        = string
-  description = "CA certificate of the cluster"
-}
-
-variable "cluster_endpoint" {
-  type        = string
-  description = "Endpoint of the cluster"
-}
-
-variable "token" {
-  type        = string
-  description = "Token to authenticate with the cluster"
+  description = "Name of the cluster"
 }
 
 variable "set_values" {
   type        = any
   description = "A map of values to pass to the Helm chart"
   default     = {}
+}
+variable "trigger_helm_update" {
+  description = "Set this to true value trigger a Helm chart update"
+  type        = bool
+  default     = false
 }

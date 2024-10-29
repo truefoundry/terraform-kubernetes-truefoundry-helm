@@ -1,9 +1,19 @@
+data "aws_eks_cluster_auth" "cluster" {
+  name = var.cluster_name
+}
+
+data "aws_eks_cluster" "cluster" {
+  name = var.cluster_name
+}
+
+
 resource "null_resource" "helm_install" {
   triggers = {
-    chart_name    = var.chart_name
-    chart_version = var.chart_version
-    release_name  = var.release_name
-    namespace     = var.namespace
+    chart_name     = var.chart_name
+    chart_version  = var.chart_version
+    release_name   = var.release_name
+    namespace      = var.namespace
+    update_trigger = var.trigger_helm_update != null ? timestamp() : "initial"
   }
 
   provisioner "local-exec" {
@@ -11,17 +21,17 @@ resource "null_resource" "helm_install" {
       echo "Starting Helm install process..."
       
       # Create a temporary kubeconfig file
-      KUBECONFIG_FILE=$(mktemp)
-      echo "Created temporary KUBECONFIG file: $KUBECONFIG_FILE"
+      export KUBECONFIG=$(mktemp)
+      echo "Created temporary KUBECONFIG file: $KUBECONFIG"
       
       # Write the kubeconfig content
-      cat <<EOF > $KUBECONFIG_FILE
+      cat <<EOF > $KUBECONFIG
       apiVersion: v1
       kind: Config
       clusters:
       - cluster:
-          server: ${var.cluster_endpoint}
-          certificate-authority-data: ${var.cluster_ca_certificate}
+          server: ${data.aws_eks_cluster.cluster.endpoint}
+          certificate-authority-data: ${data.aws_eks_cluster.cluster.certificate_authority[0].data}
         name: kubernetes
       contexts:
       - context:
@@ -32,9 +42,9 @@ resource "null_resource" "helm_install" {
       users:
       - name: aws
         user:
-          token: ${var.token}
+          token: ${data.aws_eks_cluster_auth.cluster.token}
       EOF
-      echo "Wrote kubeconfig content to $KUBECONFIG_FILE"
+      echo "Wrote kubeconfig content to $KUBECONFIG"
       
       # Create a temporary values file
       VALUES_FILE=$(mktemp)
@@ -48,9 +58,9 @@ resource "null_resource" "helm_install" {
       
       # Run Helm command with the temporary kubeconfig and values file
       echo "Running Helm command..."
-      KUBECONFIG=$KUBECONFIG_FILE helm repo add ${var.repo_name} ${var.repo_url}
-      KUBECONFIG=$KUBECONFIG_FILE helm repo update
-      KUBECONFIG=$KUBECONFIG_FILE helm upgrade --install ${var.release_name} ${var.repo_name}/${var.chart_name} \
+      helm repo add ${var.repo_name} ${var.repo_url}
+      helm repo update
+      helm upgrade --install ${var.release_name} ${var.repo_name}/${var.chart_name} \
         --version ${var.chart_version} \
         --namespace ${var.namespace} \
         ${var.create_namespace ? "--create-namespace" : ""} \
@@ -61,7 +71,7 @@ resource "null_resource" "helm_install" {
       echo "Helm command exited with code: $HELM_EXIT_CODE"
       
       # Clean up the temporary files
-      rm $KUBECONFIG_FILE
+      rm $KUBECONFIG
       rm $VALUES_FILE
       echo "Removed temporary KUBECONFIG and values files"
       
