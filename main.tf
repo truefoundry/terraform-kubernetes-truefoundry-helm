@@ -21,11 +21,11 @@ resource "null_resource" "helm_install" {
       echo "Starting Helm install process..."
       
       # Create a temporary kubeconfig file
-      KUBECONFIG_FILE=$(mktemp)
-      echo "Created temporary KUBECONFIG file: $KUBECONFIG_FILE"
+      export KUBECONFIG=$(mktemp)
+      echo "Created temporary KUBECONFIG file: $KUBECONFIG"
       
       # Write the kubeconfig content
-      cat <<EOF > $KUBECONFIG_FILE
+      cat <<EOF > $KUBECONFIG
       apiVersion: v1
       kind: Config
       clusters:
@@ -44,7 +44,7 @@ resource "null_resource" "helm_install" {
         user:
           token: ${data.aws_eks_cluster_auth.cluster.token}
       EOF
-      echo "Wrote kubeconfig content to $KUBECONFIG_FILE"
+      echo "Wrote kubeconfig content to $KUBECONFIG"
       
       # Create a temporary values file
       VALUES_FILE=$(mktemp)
@@ -58,9 +58,9 @@ resource "null_resource" "helm_install" {
       
       # Run Helm command with the temporary kubeconfig and values file
       echo "Running Helm command..."
-      KUBECONFIG=$KUBECONFIG_FILE helm repo add ${var.repo_name} ${var.repo_url}
-      KUBECONFIG=$KUBECONFIG_FILE helm repo update
-      KUBECONFIG=$KUBECONFIG_FILE helm upgrade --install ${var.release_name} ${var.repo_name}/${var.chart_name} \
+      helm repo add ${var.repo_name} ${var.repo_url}
+      helm repo update
+      helm upgrade --install ${var.release_name} ${var.repo_name}/${var.chart_name} \
         --version ${var.chart_version} \
         --namespace ${var.namespace} \
         ${var.create_namespace ? "--create-namespace" : ""} \
@@ -71,7 +71,7 @@ resource "null_resource" "helm_install" {
       echo "Helm command exited with code: $HELM_EXIT_CODE"
       
       # Clean up the temporary files
-      rm $KUBECONFIG_FILE
+      rm $KUBECONFIG
       rm $VALUES_FILE
       echo "Removed temporary KUBECONFIG and values files"
       
