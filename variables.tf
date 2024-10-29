@@ -45,7 +45,7 @@ variable "set_values" {
   default     = {}
 }
 variable "trigger_helm_update" {
-  description = "Set this to any value to trigger a Helm chart update"
+  description = "Set this to true value trigger a Helm chart update"
   type        = bool
   default     = false
 }
