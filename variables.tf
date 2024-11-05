@@ -34,18 +34,19 @@ variable "repo_url" {
   description = "URL of the Helm repository"
 }
 
-variable "cluster_name" {
-  type        = string
-  description = "Name of the cluster"
-}
-
 variable "set_values" {
   type        = any
   description = "A map of values to pass to the Helm chart"
   default     = {}
 }
+
 variable "trigger_helm_update" {
   description = "Set this to true value trigger a Helm chart update"
   type        = bool
   default     = false
+}
+
+variable "kubeconfig_json" {
+  description = "Kubeconfig JSON"
+  type        = string
 }
