@@ -59,14 +59,14 @@ This module is released under the MIT License. See the [LICENSE](./LICENSE) file
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.0 |
+| <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
-| <a name="provider_null"></a> [null](#provider\_null) | n/a |
+| <a name="provider_null"></a> [null](#provider\_null) | >= 3.0.0 |
 
 ## Modules
 
@@ -77,8 +77,6 @@ No modules.
 | Name | Type |
 |------|------|
 | [null_resource.helm_install](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
-| [aws_eks_cluster.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster) | data source |
-| [aws_eks_cluster_auth.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster_auth) | data source |
 
 ## Inputs
 
@@ -86,8 +84,8 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_chart_name"></a> [chart\_name](#input\_chart\_name) | Name of the chart | `string` | n/a | yes |
 | <a name="input_chart_version"></a> [chart\_version](#input\_chart\_version) | Version of the chart | `string` | n/a | yes |
-| <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the cluster | `string` | n/a | yes |
 | <a name="input_create_namespace"></a> [create\_namespace](#input\_create\_namespace) | Create the namespace if it does not exist. Defaults to false | `bool` | `false` | no |
+| <a name="input_kubeconfig_json"></a> [kubeconfig\_json](#input\_kubeconfig\_json) | Kubeconfig JSON | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace to install the chart | `string` | n/a | yes |
 | <a name="input_release_name"></a> [release\_name](#input\_release\_name) | Release name of the chart | `string` | n/a | yes |
 | <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Name of the Helm repository | `string` | n/a | yes |

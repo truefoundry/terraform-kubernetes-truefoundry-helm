@@ -1,12 +1,17 @@
-data "aws_eks_cluster_auth" "cluster" {
-  name = var.cluster_name
+
+locals {
+  # Helm command configuration
+  helm_command = <<-EOT
+    helm upgrade --install ${var.release_name} ${var.repo_name}/${var.chart_name} \
+      --version ${var.chart_version} \
+      --namespace ${var.namespace} \
+      ${var.create_namespace ? "--create-namespace" : ""} \
+      -f $VALUES_FILE \
+      --debug
+  EOT
 }
 
-data "aws_eks_cluster" "cluster" {
-  name = var.cluster_name
-}
-
-
+# Main resource for Helm installation
 resource "null_resource" "helm_install" {
   triggers = {
     chart_name          = var.chart_name
@@ -20,60 +25,35 @@ resource "null_resource" "helm_install" {
     command = <<-EOT
       echo "Starting Helm install process..."
       
-      # Create a temporary kubeconfig file
+      # Create temporary files
       export KUBECONFIG=$(mktemp)
-      echo "Created temporary KUBECONFIG file: $KUBECONFIG"
-      
-      # Write the kubeconfig content
-      cat <<EOF > $KUBECONFIG
-      apiVersion: v1
-      kind: Config
-      clusters:
-      - cluster:
-          server: ${data.aws_eks_cluster.cluster.endpoint}
-          certificate-authority-data: ${data.aws_eks_cluster.cluster.certificate_authority[0].data}
-        name: kubernetes
-      contexts:
-      - context:
-          cluster: kubernetes
-          user: aws
-        name: aws
-      current-context: aws
-      users:
-      - name: aws
-        user:
-          token: ${data.aws_eks_cluster_auth.cluster.token}
-      EOF
-      echo "Wrote kubeconfig content to $KUBECONFIG"
-      
-      # Create a temporary values file
       VALUES_FILE=$(mktemp)
-      echo "Created temporary values file: $VALUES_FILE"
+      echo "Created temporary files: KUBECONFIG=$KUBECONFIG, VALUES_FILE=$VALUES_FILE"
       
-      # Write the values content
+      # Generate kubeconfig
+      cat <<EOF > $KUBECONFIG
+      ${var.kubeconfig_json}
+      EOF
+      echo "Generated kubeconfig file"
+      
+      # Generate values file
       cat <<EOF > $VALUES_FILE
       ${jsonencode(var.set_values)}
       EOF
-      echo "Wrote values content to $VALUES_FILE"
+      echo "Generated values file"
       
-      # Run Helm command with the temporary kubeconfig and values file
-      echo "Running Helm command..."
+      # Execute Helm commands
+      echo "Executing Helm commands..."
       helm repo add ${var.repo_name} ${var.repo_url}
       helm repo update
-      helm upgrade --install ${var.release_name} ${var.repo_name}/${var.chart_name} \
-        --version ${var.chart_version} \
-        --namespace ${var.namespace} \
-        ${var.create_namespace ? "--create-namespace" : ""} \
-        -f $VALUES_FILE \
-        --debug
+      ${local.helm_command}
       
       HELM_EXIT_CODE=$?
-      echo "Helm command exited with code: $HELM_EXIT_CODE"
+      echo "Helm command completed with exit code: $HELM_EXIT_CODE"
       
-      # Clean up the temporary files
-      rm $KUBECONFIG
-      rm $VALUES_FILE
-      echo "Removed temporary KUBECONFIG and values files"
+      # Cleanup
+      rm $KUBECONFIG $VALUES_FILE
+      echo "Cleaned up temporary files"
       
       exit $HELM_EXIT_CODE
     EOT
