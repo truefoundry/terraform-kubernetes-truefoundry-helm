@@ -14,11 +14,11 @@ locals {
 # Main resource for Helm installation
 resource "null_resource" "helm_install" {
   triggers = {
-    chart_name          = var.chart_name
-    chart_version       = var.chart_version
-    release_name        = var.release_name
-    namespace           = var.namespace
-    trigger_helm_update = var.trigger_helm_update != false ? timestamp() : "initial"
+    chart_name    = var.chart_name
+    chart_version = var.chart_version
+    release_name  = var.release_name
+    namespace     = var.namespace
+    always_update = var.always_update != false ? timestamp() : "initial"
   }
 
   provisioner "local-exec" {

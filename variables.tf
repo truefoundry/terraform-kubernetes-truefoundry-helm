@@ -40,7 +40,7 @@ variable "set_values" {
   default     = {}
 }
 
-variable "trigger_helm_update" {
+variable "always_update" {
   description = "Set this to true value trigger a Helm chart update"
   type        = bool
   default     = false
