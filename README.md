@@ -82,6 +82,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_always_update"></a> [always\_update](#input\_always\_update) | Set this to true value trigger a Helm chart update | `bool` | `false` | no |
 | <a name="input_chart_name"></a> [chart\_name](#input\_chart\_name) | Name of the chart | `string` | n/a | yes |
 | <a name="input_chart_version"></a> [chart\_version](#input\_chart\_version) | Version of the chart | `string` | n/a | yes |
 | <a name="input_create_namespace"></a> [create\_namespace](#input\_create\_namespace) | Create the namespace if it does not exist. Defaults to false | `bool` | `false` | no |
@@ -91,7 +92,6 @@ No modules.
 | <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Name of the Helm repository | `string` | n/a | yes |
 | <a name="input_repo_url"></a> [repo\_url](#input\_repo\_url) | URL of the Helm repository | `string` | n/a | yes |
 | <a name="input_set_values"></a> [set\_values](#input\_set\_values) | A map of values to pass to the Helm chart | `any` | `{}` | no |
-| <a name="input_trigger_helm_update"></a> [trigger\_helm\_update](#input\_trigger\_helm\_update) | Set this to true value trigger a Helm chart update | `bool` | `false` | no |
 
 ## Outputs
 
