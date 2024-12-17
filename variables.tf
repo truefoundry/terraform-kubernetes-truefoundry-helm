@@ -4,8 +4,9 @@ variable "chart_name" {
 }
 
 variable "chart_version" {
+  description = "Version of the Helm chart to install. If not specified, the latest version will be used."
   type        = string
-  description = "Version of the chart"
+  default     = ""
 }
 
 variable "release_name" {

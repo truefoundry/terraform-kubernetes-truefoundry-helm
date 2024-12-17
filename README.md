@@ -84,7 +84,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_always_update"></a> [always\_update](#input\_always\_update) | Set this to true value trigger a Helm chart update | `bool` | `false` | no |
 | <a name="input_chart_name"></a> [chart\_name](#input\_chart\_name) | Name of the chart | `string` | n/a | yes |
-| <a name="input_chart_version"></a> [chart\_version](#input\_chart\_version) | Version of the chart | `string` | n/a | yes |
+| <a name="input_chart_version"></a> [chart\_version](#input\_chart\_version) | Version of the Helm chart to install. If not specified, the latest version will be used. | `string` | `""` | no |
 | <a name="input_create_namespace"></a> [create\_namespace](#input\_create\_namespace) | Create the namespace if it does not exist. Defaults to false | `bool` | `false` | no |
 | <a name="input_kubeconfig_json"></a> [kubeconfig\_json](#input\_kubeconfig\_json) | Kubeconfig JSON | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace to install the chart | `string` | n/a | yes |

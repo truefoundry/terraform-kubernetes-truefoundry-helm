@@ -1,9 +1,11 @@
-
 locals {
+  # Get latest version if chart_version is not specified
+  helm_version_flag = var.chart_version != "" ? "--version ${var.chart_version}" : ""
+
   # Helm command configuration
   helm_command = <<-EOT
     helm upgrade --install ${var.release_name} ${var.repo_name}/${var.chart_name} \
-      --version ${var.chart_version} \
+      ${local.helm_version_flag} \
       --namespace ${var.namespace} \
       ${var.create_namespace ? "--create-namespace" : ""} \
       -f $VALUES_FILE \
