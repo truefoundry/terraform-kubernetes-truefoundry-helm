@@ -47,7 +47,7 @@ resource "null_resource" "helm_install" {
       # Execute Helm commands
       echo "Executing Helm commands..."
       helm repo add ${var.repo_name} ${var.repo_url}
-      helm repo update
+      helm repo update ${var.repo_name}
       ${local.helm_command}
       
       HELM_EXIT_CODE=$?
