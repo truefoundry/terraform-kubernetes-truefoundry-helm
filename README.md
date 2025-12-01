@@ -50,10 +50,6 @@ This Terraform module provides a flexible way to install Helm charts on a Kubern
 
 Contributions to improve this module are welcome. Please submit a pull request or open an issue on the repository.
 
-## License
-
-This module is released under the MIT License. See the [LICENSE](./LICENSE) file for more details.
-
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
