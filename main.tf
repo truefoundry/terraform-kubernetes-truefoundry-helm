@@ -86,10 +86,32 @@ resource "null_resource" "helm_install" {
 # A `count` gate keeps the resource entirely absent when no hook is wanted —
 # so existing clusters that don't yet pass destroy_command see zero new
 # resources in plan, only the install they already have.
+# Plan-time bash availability check. Surfaces the bash requirement as a clear
+# plan-stage error on Windows-native runners (and any runner missing bash) so
+# operators don't hit a cryptic shell error mid-destroy. Both the install
+# provisioner (interpreter=/bin/bash, uses heredocs and helm) and the destroy
+# hook below require bash; this guard is intentionally scoped to the destroy
+# path because that's where data loss from an unexpected failure is hardest to
+# recover from.
+data "external" "bash_check" {
+  count   = var.destroy_command != "" ? 1 : 0
+  program = ["bash", "-c", "printf '{\"version\":\"%s\"}' \"$BASH_VERSION\""]
+}
+
+resource "terraform_data" "bash_required" {
+  count = var.destroy_command != "" ? 1 : 0
+  lifecycle {
+    precondition {
+      condition     = length(data.external.bash_check) > 0 && data.external.bash_check[0].result.version != ""
+      error_message = "destroy_command requires bash on the runner's PATH. This module does not support Windows-native runners — use WSL/Linux/macOS, or unset destroy_command (the surrounding cluster destroy may then leave orphaned cloud resources)."
+    }
+  }
+}
+
 resource "null_resource" "helm_destroy_hook" {
   count = var.destroy_command != "" ? 1 : 0
 
-  depends_on = [null_resource.helm_install]
+  depends_on = [null_resource.helm_install, terraform_data.bash_required]
 
   # destroy_command is the only thing the hook needs. We deliberately keep
   # KUBECONFIG_JSON out of triggers (its token rotates every plan and would
