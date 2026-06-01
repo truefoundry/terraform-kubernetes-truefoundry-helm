@@ -121,6 +121,19 @@ resource "null_resource" "helm_destroy_hook" {
     destroy_command = var.destroy_command
   }
 
+  # Freeze triggers after first apply. Without this, editing var.destroy_command
+  # would mutate the trigger, force-replace this resource, and fire the OLD
+  # destroy script during a routine apply against a live cluster — wiping
+  # Karpenter EC2 + Istio NLB when the operator only intended a config edit.
+  # Trade-off: script updates require `terraform apply
+  # -replace=module.<name>.null_resource.helm_destroy_hook[0]` while the
+  # cluster is quiescent. To retire the hook on a live cluster, use
+  # `terraform state rm` rather than setting destroy_command = "" (a count
+  # flip to 0 would also fire the captured script).
+  lifecycle {
+    ignore_changes = [triggers]
+  }
+
   provisioner "local-exec" {
     when        = destroy
     interpreter = ["/bin/bash", "-c"]
