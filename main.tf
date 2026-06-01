@@ -94,12 +94,12 @@ resource "null_resource" "helm_install" {
 # path because that's where data loss from an unexpected failure is hardest to
 # recover from.
 data "external" "bash_check" {
-  count   = var.destroy_command != "" ? 1 : 0
+  count   = trimspace(var.destroy_command) != "" ? 1 : 0
   program = ["bash", "-c", "printf '{\"version\":\"%s\"}' \"$BASH_VERSION\""]
 }
 
 resource "terraform_data" "bash_required" {
-  count = var.destroy_command != "" ? 1 : 0
+  count = trimspace(var.destroy_command) != "" ? 1 : 0
   lifecycle {
     precondition {
       condition     = length(data.external.bash_check) > 0 && data.external.bash_check[0].result.version != ""
@@ -109,7 +109,7 @@ resource "terraform_data" "bash_required" {
 }
 
 resource "null_resource" "helm_destroy_hook" {
-  count = var.destroy_command != "" ? 1 : 0
+  count = trimspace(var.destroy_command) != "" ? 1 : 0
 
   depends_on = [null_resource.helm_install, terraform_data.bash_required]
 
@@ -136,7 +136,7 @@ resource "null_resource" "helm_destroy_hook" {
 
   provisioner "local-exec" {
     when        = destroy
-    interpreter = ["/bin/bash", "-c"]
+    interpreter = ["bash", "-c"]
     command     = self.triggers.destroy_command
   }
 }

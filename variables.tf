@@ -73,4 +73,9 @@ variable "destroy_command" {
   description = "Bash command run by a `when = destroy` local-exec. Empty string disables the hook (no resource created). The caller is responsible for baking any required env into the command body."
   type        = string
   default     = ""
+
+  validation {
+    condition     = trimspace(var.destroy_command) == var.destroy_command
+    error_message = "destroy_command must not have leading or trailing whitespace; use \"\" to disable the hook."
+  }
 }
