@@ -55,14 +55,17 @@ Contributions to improve this module are welcome. Please submit a pull request o
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
+| <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.0.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
+| <a name="provider_external"></a> [external](#provider\_external) | >= 2.0.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | >= 3.0.0 |
+| <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
 ## Modules
 
@@ -72,7 +75,10 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [null_resource.helm_destroy_hook](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [null_resource.helm_install](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+| [terraform_data.bash_required](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [external_external.bash_check](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 
@@ -82,6 +88,7 @@ No modules.
 | <a name="input_chart_name"></a> [chart\_name](#input\_chart\_name) | Name of the chart | `string` | n/a | yes |
 | <a name="input_chart_version"></a> [chart\_version](#input\_chart\_version) | Version of the Helm chart to install. If not specified, the latest version will be used. | `string` | `""` | no |
 | <a name="input_create_namespace"></a> [create\_namespace](#input\_create\_namespace) | Create the namespace if it does not exist. Defaults to false | `bool` | `false` | no |
+| <a name="input_destroy_command"></a> [destroy\_command](#input\_destroy\_command) | Bash command run by a `when = destroy` local-exec. Empty string disables the hook (no resource created). The caller is responsible for baking any required env into the command body. | `string` | `""` | no |
 | <a name="input_kubeconfig_json"></a> [kubeconfig\_json](#input\_kubeconfig\_json) | Kubeconfig JSON | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace to install the chart | `string` | n/a | yes |
 | <a name="input_release_name"></a> [release\_name](#input\_release\_name) | Release name of the chart | `string` | n/a | yes |
