@@ -75,7 +75,7 @@ variable "destroy_command" {
   default     = ""
 
   validation {
-    condition     = trimspace(var.destroy_command) == var.destroy_command
-    error_message = "destroy_command must not have leading or trailing whitespace; use \"\" to disable the hook."
+    condition     = var.destroy_command == "" || trimspace(var.destroy_command) != ""
+    error_message = "destroy_command must be empty (\"\") to disable, or contain non-whitespace content."
   }
 }
