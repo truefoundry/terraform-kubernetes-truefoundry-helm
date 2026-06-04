@@ -9,28 +9,16 @@ This Terraform module provides a flexible way to install Helm charts on a Kubern
 - Allows for namespace creation
 - Configurable chart values
 - Uses temporary files for secure kubeconfig and values handling
+- Optional pre-destroy teardown hook via `destroy_command`
 
 ## Requirements
 
-- Terraform >= 0.13
+- Terraform >= 1.4.0
 - Helm (installed on the machine running Terraform)
 - Access to a Kubernetes cluster
-
-## Input Variables
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| `chart_name` | Name of the Helm chart to install | `string` | n/a | yes |
-| `chart_version` | Version of the Helm chart to install | `string` | n/a | yes |
-| `release_name` | Name for the Helm release | `string` | n/a | yes |
-| `namespace` | Kubernetes namespace to install the release into | `string` | n/a | yes |
-| `create_namespace` | Whether to create the namespace if it doesn't exist | `bool` | `false` | no |
-| `repo_name` | Name of the Helm repository | `string` | n/a | yes |
-| `repo_url` | URL of the Helm repository | `string` | n/a | yes |
-| `cluster_ca_certificate` | Base64 encoded CA certificate of the Kubernetes cluster | `string` | n/a | yes |
-| `cluster_endpoint` | Endpoint of the Kubernetes cluster | `string` | n/a | yes |
-| `token` | Authentication token for the Kubernetes cluster | `string` | n/a | yes |
-| `set_values` | Map of values to pass to the Helm chart | `any` | `{}` | no |
+- For the optional `destroy_command` hook: `bash` on `PATH`, plus whatever tools
+  the command itself invokes — see
+  [Shell requirement](#shell-requirement-windows-not-supported)
 
 ## How it works
 
@@ -46,6 +34,73 @@ This Terraform module provides a flexible way to install Helm charts on a Kubern
 - The module uses a `null_resource` with a `local-exec` provisioner, which means the Helm commands are executed on the machine running Terraform, not within Terraform itself.
 - Be cautious with sensitive information in `set_values`. While this module uses temporary files, it's generally a good practice to manage secrets separately.
 
+## Shell requirement (Windows not supported)
+
+This module shells out via `local-exec` provisioners, so it requires a POSIX
+shell environment on the machine running Terraform. **Windows-native runners are
+not supported — run from WSL, Linux, or macOS.**
+
+- `null_resource.helm_install` runs under the default `local-exec` shell
+  (`/bin/sh` on Unix) and uses POSIX heredocs plus `helm`. It needs `helm` on
+  `PATH`.
+- The optional `destroy_command` hook (`null_resource.helm_destroy_hook`) runs
+  explicitly under `bash` (`interpreter = ["bash", "-c"]`), so **`bash` must be
+  on `PATH`** for the command to run. The command is caller-supplied and may need
+  additional tools on `PATH` depending on what it does.
+
+There is no plan-time guard for these requirements: a missing shell, `bash`, or
+`helm` surfaces as a provisioner launch/exit failure at `apply`/`destroy` time.
+Because the teardown never starts when `bash` is absent, no partial destroy
+occurs — the operation simply fails. Re-run from a supported environment to
+recover.
+
+### Recovering a `destroy` when `bash` is unavailable
+
+If `null_resource.helm_destroy_hook` is already in state and you run
+`terraform destroy` on a host without `bash`, the destroy **starts** (there is no
+plan-time bash dependency) but fails the moment Terraform invokes the
+`when = destroy` provisioner:
+
+```
+Error: running "bash -c ...": exec: "bash": executable file not found in $PATH
+```
+
+A failed destroy-time provisioner aborts the destroy and leaves the resource in
+state. Because the hook `depends_on` `helm_install`, it is torn down **first**
+(reverse-graph order), so the failure happens before anything else is destroyed —
+nothing is left half-torn-down, and you are in a clean, recoverable spot.
+
+**Option 1 — run the destroy from a `bash`-capable host (preferred, no data loss).**
+Re-run `terraform destroy` from WSL, Linux, or macOS with `bash` (and whatever
+else your `destroy_command` invokes) on `PATH`. The `destroy_command` runs and the
+rest of the stack destroys normally. This is the intended path.
+
+**Option 2 — drop the hook from state and skip the teardown (escape hatch).**
+
+```bash
+terraform state rm 'module.<name>.null_resource.helm_destroy_hook[0]'
+terraform destroy
+```
+
+`state rm` makes Terraform forget the resource **without running its destroy
+provisioner**, so the destroy proceeds without `bash`. The cost: the
+`destroy_command` never runs, so **whatever cloud resources it was responsible for
+cleaning up may be orphaned** — and orphaned resources can block downstream
+destroys (e.g. a VPC that still has attached ENIs). Take this path only if `bash`
+is truly unobtainable, and plan to clean up those resources manually or run your
+`destroy_command` logic separately from a `bash`-capable host.
+
+### Managing the `destroy_command` hook
+
+- The hook's `triggers` are frozen after first apply (`ignore_changes`). To
+  update the script on an existing resource, run
+  `terraform apply -replace='module.<name>.null_resource.helm_destroy_hook[0]'`
+  while the cluster is quiescent.
+- To retire the hook on a live cluster, use
+  `terraform state rm 'module.<name>.null_resource.helm_destroy_hook[0]'` rather
+  than setting `destroy_command = ""` — flipping the count to 0 would fire the
+  captured teardown script.
+
 ## Contributing
 
 Contributions to improve this module are welcome. Please submit a pull request or open an issue on the repository.
@@ -56,16 +111,13 @@ Contributions to improve this module are welcome. Please submit a pull request o
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
-| <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.0.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_external"></a> [external](#provider\_external) | >= 2.0.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | >= 3.0.0 |
-| <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
 ## Modules
 
@@ -77,8 +129,6 @@ No modules.
 |------|------|
 | [null_resource.helm_destroy_hook](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [null_resource.helm_install](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
-| [terraform_data.bash_required](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
-| [external_external.bash_check](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 

@@ -72,64 +72,45 @@ resource "null_resource" "helm_install" {
 # Why a separate resource (not a second provisioner on helm_install):
 #   - On upgrade from a prior helm-module version, adding triggers to
 #     helm_install would force-recreate it and re-run `helm upgrade --install`
-#     on every existing cluster. The inframold chart is intended to be
-#     bootstrapped once (it carries `helm.sh/resource-policy: keep` and hands
-#     off to ArgoCD), so a forced reinstall has unwanted side effects
-#     (pre-sync hooks re-fire, etc.).
-#   - Iterating on destroy_command (e.g. editing the teardown script) would
-#     also recreate helm_install if they shared triggers. Decoupling means
-#     script edits never touch the install lifecycle.
+#     on every existing release. Depending on the chart, a forced reinstall can
+#     have unwanted side effects (e.g. helm hooks re-firing), so we keep the
+#     install lifecycle untouched.
+#   - Iterating on destroy_command (e.g. editing the command) would also
+#     recreate helm_install if they shared triggers. Decoupling means command
+#     edits never touch the install lifecycle.
 #
 # Create-order: depends_on helm_install → so on destroy, this resource is
 # torn down FIRST (reverse-graph order). Its when=destroy provisioner runs
-# while everything (cluster API, controllers, ArgoCD) is still alive.
+# while the release it targets is still present.
 # A `count` gate keeps the resource entirely absent when no hook is wanted —
-# so existing clusters that don't yet pass destroy_command see zero new
+# so existing releases that don't yet pass destroy_command see zero new
 # resources in plan, only the install they already have.
-# Plan-time bash availability check. Surfaces the bash requirement as a clear
-# plan-stage error on Windows-native runners (and any runner missing bash) so
-# operators don't hit a cryptic shell error mid-destroy. Both the install
-# provisioner (interpreter=/bin/bash, uses heredocs and helm) and the destroy
-# hook below require bash; this guard is intentionally scoped to the destroy
-# path because that's where data loss from an unexpected failure is hardest to
-# recover from.
-data "external" "bash_check" {
-  count   = trimspace(var.destroy_command) != "" ? 1 : 0
-  program = ["bash", "-c", "printf '{\"version\":\"%s\"}' \"$BASH_VERSION\""]
-}
-
-resource "terraform_data" "bash_required" {
-  count = trimspace(var.destroy_command) != "" ? 1 : 0
-  lifecycle {
-    precondition {
-      condition     = length(data.external.bash_check) > 0 && data.external.bash_check[0].result.version != ""
-      error_message = "destroy_command requires bash on the runner's PATH. This module does not support Windows-native runners — use WSL/Linux/macOS, or unset destroy_command (the surrounding cluster destroy may then leave orphaned cloud resources)."
-    }
-  }
-}
-
+#
+# destroy_command is an opaque, caller-supplied string: this module does not
+# know or assume what it does. The comments below cover the resource lifecycle
+# only.
 resource "null_resource" "helm_destroy_hook" {
   count = trimspace(var.destroy_command) != "" ? 1 : 0
 
-  depends_on = [null_resource.helm_install, terraform_data.bash_required]
+  depends_on = [null_resource.helm_install]
 
-  # destroy_command is the only thing the hook needs. We deliberately keep
-  # KUBECONFIG_JSON out of triggers (its token rotates every plan and would
-  # force-recreate the resource every apply); the caller's script body should
-  # build a kubeconfig via `aws eks update-kubeconfig` exec-auth.
+  # destroy_command is the only thing the hook tracks in triggers. Anything that
+  # rotates every plan (tokens, generated kubeconfigs, etc.) is deliberately kept
+  # out — including it would force-recreate the resource on every apply. How the
+  # command authenticates to the cluster is the caller's concern.
   triggers = {
     destroy_command = var.destroy_command
   }
 
   # Freeze triggers after first apply. Without this, editing var.destroy_command
   # would mutate the trigger, force-replace this resource, and fire the OLD
-  # destroy script during a routine apply against a live cluster — wiping
-  # Karpenter EC2 + Istio NLB when the operator only intended a config edit.
-  # Trade-off: script updates require `terraform apply
+  # destroy command during a routine apply against a live cluster — running a
+  # teardown the operator never intended when they only meant to edit config.
+  # Trade-off: command updates require `terraform apply
   # -replace=module.<name>.null_resource.helm_destroy_hook[0]` while the
   # cluster is quiescent. To retire the hook on a live cluster, use
   # `terraform state rm` rather than setting destroy_command = "" (a count
-  # flip to 0 would also fire the captured script).
+  # flip to 0 would also fire the captured command).
   lifecycle {
     ignore_changes = [triggers]
   }
