@@ -22,7 +22,7 @@ locals {
 resource "null_resource" "helm_install" {
   triggers = {
     chart_name    = var.chart_name
-    chart_version = var.chart_version
+    # chart_version = var.chart_version
     release_name  = var.release_name
     namespace     = var.namespace
     always_update = var.always_update != false ? timestamp() : "initial"
@@ -64,6 +64,12 @@ resource "null_resource" "helm_install" {
 
       exit $HELM_EXIT_CODE
     EOT
+  }
+
+  lifecycle {
+    ignore_changes = [
+      triggers["chart_version"],
+    ]
   }
 }
 
