@@ -21,7 +21,7 @@ locals {
 # so its lifecycle is decoupled from the install.
 resource "null_resource" "helm_install" {
   triggers = {
-    chart_name    = var.chart_name
+    chart_name = var.chart_name
     # chart_version = var.chart_version
     release_name  = var.release_name
     namespace     = var.namespace
